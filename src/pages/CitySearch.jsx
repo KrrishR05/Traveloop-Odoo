@@ -6,7 +6,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import { destinations } from '../data/destinations';
 
-const CONTINENTS = ['All', 'Asia', 'Europe', 'North America', 'South America'];
+const CONTINENTS = ['All', 'Asia', 'Europe', 'North America', 'South America', 'Africa'];
 
 const categoryVariant = (tag) => {
   const map = { Beach: 'teal', Mountains: 'indigo', City: 'slate', Culture: 'sand',
@@ -34,6 +34,7 @@ export default function CitySearch() {
   const [query,     setQuery]     = useState('');
   const [continent, setContinent] = useState('All');
   const [hovered,   setHovered]   = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
 
   const filtered = useMemo(() =>
     destinations.filter((d) => {
@@ -51,7 +52,7 @@ export default function CitySearch() {
   const featured = destinations.slice(0, 3);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-14">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-14 relative">
 
       {/* ── Hero search ──────────────────────────────────────── */}
       <section className="relative rounded-4xl overflow-hidden h-72 md:h-80">
@@ -115,7 +116,7 @@ export default function CitySearch() {
                 key={dest.id}
                 className="relative h-64 rounded-3xl overflow-hidden group cursor-pointer shadow-card
                   transition-all duration-300 hover:shadow-card-lg hover:-translate-y-1.5"
-                onClick={() => navigate('/trips/create')}
+                onClick={() => setSelectedCity(dest)}
                 onMouseEnter={() => setHovered(dest.id)}
                 onMouseLeave={() => setHovered(null)}
               >
@@ -206,7 +207,7 @@ export default function CitySearch() {
                 key={dest.id}
                 className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden
                   transition-all duration-300 hover:shadow-card-lg hover:-translate-y-1.5 hover:border-primary-100 group cursor-pointer"
-                onClick={() => navigate('/trips/create')}
+                onClick={() => setSelectedCity(dest)}
               >
                 {/* Image */}
                 <div className="relative h-44 overflow-hidden">
@@ -254,7 +255,7 @@ export default function CitySearch() {
                       <DollarSign className="w-3 h-3" /> {dest.avgBudget}
                     </span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); navigate('/trips/create'); }}
+                      onClick={(e) => { e.stopPropagation(); navigate('/trips/create', { state: { prefillDestination: dest.name } }); }}
                       className="text-primary-600 font-medium hover:text-primary-700 transition-colors"
                     >
                       Plan trip →
@@ -266,6 +267,88 @@ export default function CitySearch() {
           </div>
         )}
       </section>
+
+      {/* ── City Details Modal ───────────────────────────────── */}
+      {selectedCity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div 
+            className="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl animate-[fadeUp_0.3s_ease-out_forwards]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Image */}
+            <div className="relative h-48 sm:h-64">
+              <img 
+                src={selectedCity.image} 
+                alt={selectedCity.name} 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+              <button 
+                onClick={() => setSelectedCity(null)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 
+                  backdrop-blur-md rounded-full text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-4 left-6 right-6 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold uppercase tracking-widest text-primary-400">{selectedCity.continent}</span>
+                  <span className="w-1 h-1 rounded-full bg-white/50" />
+                  <span className="text-xs font-medium text-white/80">{selectedCity.country}</span>
+                </div>
+                <h2 className="text-3xl font-bold drop-shadow-md">{selectedCity.name}</h2>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span className="font-semibold text-slate-800">{selectedCity.rating}</span>
+                  <span className="text-xs">({selectedCity.reviews} reviews)</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <Clock className="w-4 h-4 text-primary-500" />
+                  <span className="text-xs">Best time: <strong className="text-slate-800">{selectedCity.bestTime}</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs">Avg Budget: <strong className="text-slate-800">{selectedCity.avgBudget}</strong></span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-slate-800 mb-2">About</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{selectedCity.description}</p>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-slate-800 mb-2">Top Highlights</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCity.highlights.map(h => (
+                    <span key={h} className="px-3 py-1.5 bg-primary-50 text-primary-700 text-xs font-medium rounded-lg border border-primary-100/50">
+                      {h}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <Button 
+                  variant="brand" 
+                  size="lg" 
+                  className="w-full text-base py-3.5 shadow-brand"
+                  onClick={() => navigate('/trips/create', { state: { prefillDestination: selectedCity.name } })}
+                >
+                  <MapPin className="w-5 h-5 mr-1" />
+                  Start the trip from there
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

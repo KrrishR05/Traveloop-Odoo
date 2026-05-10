@@ -94,3 +94,22 @@ class ProfileUpdateSerializer(serializers.Serializer):
     location   = serializers.CharField(max_length=100, required=False, allow_blank=True)
     phone      = serializers.CharField(max_length=20, required=False, allow_blank=True)
     avatar_url = serializers.URLField(required=False, allow_blank=True)
+
+
+class GoogleLoginSerializer(serializers.Serializer):
+    """Validates Google Sign-In data (hackathon demo — no real OAuth)."""
+    email      = serializers.EmailField()
+    first_name = serializers.CharField(max_length=30, required=False, default='')
+    last_name  = serializers.CharField(max_length=30, required=False, default='')
+    avatar_url = serializers.URLField(required=False, default='')
+
+
+class PhoneLoginSerializer(serializers.Serializer):
+    """Request OTP for phone login."""
+    phone = serializers.CharField(max_length=20)
+
+
+class OTPVerifySerializer(serializers.Serializer):
+    """Verify OTP code."""
+    phone = serializers.CharField(max_length=20)
+    otp   = serializers.CharField(max_length=6)

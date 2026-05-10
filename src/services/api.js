@@ -81,6 +81,19 @@ export const authService = {
     setStoredUser(res.user);
     return res;
   },
+  googleLogin: async (data) => {
+    const res = await post('/auth/google-login/', data);
+    setToken(res.token);
+    setStoredUser(res.user);
+    return res;
+  },
+  phoneLogin: (phone) => post('/auth/phone-login/', { phone }),
+  verifyOTP: async (phone, otp) => {
+    const res = await post('/auth/verify-otp/', { phone, otp });
+    setToken(res.token);
+    setStoredUser(res.user);
+    return res;
+  },
   logout: async () => {
     try {
       await post('/auth/logout/', {});

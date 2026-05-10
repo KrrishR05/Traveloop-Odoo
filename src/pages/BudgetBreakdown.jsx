@@ -122,7 +122,6 @@ export default function BudgetBreakdown() {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <p className="text-sm font-medium text-primary-600 mb-1">Module 4</p>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Budget Breakdown</h1>
           <p className="text-slate-500 mt-1 text-sm">Track spending, stay on budget, travel smarter.</p>
         </div>

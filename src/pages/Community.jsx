@@ -71,7 +71,13 @@ function PostCard({ post, onLike, onSave }) {
           <button onClick={() => onSave(post.id)} className={`p-2 rounded-xl text-sm transition-all duration-200 ${post.isSaved ? 'text-primary-600 bg-primary-50' : 'text-slate-400 hover:text-primary-500 hover:bg-primary-50'}`}>
             <Bookmark className={`w-4 h-4 ${post.isSaved ? 'fill-primary-500' : ''}`} />
           </button>
-          <button className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
+          <button
+            onClick={() => {
+              const shareData = { title: `${post.destination} on Traveloop`, text: post.caption, url: window.location.href };
+              if (navigator.share) { navigator.share(shareData).catch(() => {}); }
+              else { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }
+            }}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200">
             <Share2 className="w-4 h-4" />
           </button>
         </div>
@@ -121,13 +127,17 @@ export default function Community() {
   const [activeTab, setActiveTab] = useState('explore');
   const [posts, setPosts] = useState(communityPosts);
   const [search, setSearch] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState(0);
 
   const handleLike = (id) => setPosts(prev => prev.map(p => p.id === id ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p));
   const handleSave = (id) => setPosts(prev => prev.map(p => p.id === id ? { ...p, isSaved: !p.isSaved } : p));
 
-  const displayedPosts = search
-    ? posts.filter(p => p.destination.toLowerCase().includes(search.toLowerCase()) || p.author.name.toLowerCase().includes(search.toLowerCase()) || p.tags.some(t => t.toLowerCase().includes(search.toLowerCase())))
-    : posts;
+  const displayedPosts = posts.filter(p => {
+    const matchSearch = !search || p.destination.toLowerCase().includes(search.toLowerCase()) || p.author.name.toLowerCase().includes(search.toLowerCase()) || p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
+    const matchRating = !ratingFilter || p.rating >= ratingFilter;
+    return matchSearch && matchRating;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-12">
@@ -145,9 +155,24 @@ export default function Community() {
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search destinations, travelers, tags…"
             className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-card focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all text-slate-800 placeholder:text-slate-400 text-sm" />
         </div>
-        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-card text-sm font-medium text-slate-600 hover:border-primary-300 hover:text-primary-600 transition-all">
-          <Filter className="w-4 h-4" /> Filter
-        </button>
+        <div className="relative">
+          <button onClick={() => setShowFilter(v => !v)} className={`flex items-center gap-2 px-4 py-3 rounded-xl border shadow-card text-sm font-medium transition-all ${showFilter ? 'bg-primary-50 border-primary-300 text-primary-600' : 'bg-white border-slate-200 text-slate-600 hover:border-primary-300 hover:text-primary-600'}`}>
+            <Filter className="w-4 h-4" /> Filter {ratingFilter ? `(${ratingFilter}★+)` : ''}
+          </button>
+          {showFilter && (
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-card-lg p-4 z-30 animate-[fadeUp_0.2s_ease-out_forwards]">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Min Rating</p>
+              <div className="flex gap-2">
+                {[0,3,4,5].map(r => (
+                  <button key={r} onClick={() => { setRatingFilter(r); setShowFilter(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${ratingFilter === r ? 'bg-primary-50 border-primary-300 text-primary-700' : 'border-slate-200 text-slate-600 hover:border-primary-200'}`}>
+                    {r === 0 ? 'All' : `${r}★`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">

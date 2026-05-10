@@ -92,7 +92,7 @@ export default function SharedItinerary() {
           >
             {copied ? <><Check className="w-4 h-4 text-emerald-500" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Link</>}
           </button>
-          <Button variant="brand" size="sm">
+          <Button variant="brand" size="sm" onClick={() => navigate('/trips/create')}>
             <Globe className="w-4 h-4" /> Use This Plan
           </Button>
         </div>
@@ -237,7 +237,7 @@ export default function SharedItinerary() {
           <Button variant="secondary" size="sm" onClick={() => navigate('/community')}>
             More Itineraries
           </Button>
-          <Button variant="brand" size="sm">
+          <Button variant="brand" size="sm" onClick={() => navigate('/trips/create')}>
             <Globe className="w-4 h-4" /> Use This Plan
           </Button>
         </div>

@@ -3,27 +3,22 @@ import { AuthProvider } from './context/AuthContext';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
-// Existing pages
+// Pages
 import Dashboard      from './pages/Dashboard';
 import Login          from './pages/Login';
 import Register       from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
-
-// Module 2 pages
+import PhoneLogin     from './pages/PhoneLogin';
 import CreateTrip     from './pages/CreateTrip';
 import BuildItinerary from './pages/BuildItinerary';
 import ItineraryView  from './pages/ItineraryView';
 import ActivitySearch from './pages/ActivitySearch';
 import CitySearch     from './pages/CitySearch';
-
-// Module 3 pages
 import MyTrips          from './pages/MyTrips';
 import UserProfile      from './pages/UserProfile';
 import Community        from './pages/Community';
 import TripJournal      from './pages/TripJournal';
 import SharedItinerary  from './pages/SharedItinerary';
-
-// Module 4 pages
 import BudgetBreakdown    from './pages/BudgetBreakdown';
 import PackingChecklist   from './pages/PackingChecklist';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
@@ -37,6 +32,7 @@ function App() {
           <Route path="/login"           element={<Login />}          />
           <Route path="/register"        element={<Register />}       />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/phone-login"     element={<PhoneLogin />}     />
 
           {/* App routes (with Navbar via MainLayout, protected) */}
           <Route element={

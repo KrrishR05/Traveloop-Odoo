@@ -105,14 +105,11 @@ export default function AnalyticsDashboard() {
           >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <p className="text-sm font-medium text-primary-600 mb-1">Module 4</p>
+
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Analytics Dashboard</h1>
           <p className="text-slate-500 mt-1 text-sm">Your travel patterns, visualized.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="teal">Live Data</Badge>
-          <Badge variant="indigo">Django API</Badge>
-        </div>
+
       </div>
 
       {/* ── KPI Cards ────────────────────────────────────────────── */}

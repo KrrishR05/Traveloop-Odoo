@@ -92,6 +92,24 @@ export function AuthProvider({ children }) {
     return res;
   };
 
+  const googleLogin = async (data) => {
+    const res = await authService.googleLogin(data);
+    setUser(res.user);
+    setIsAuthenticated(true);
+    return res;
+  };
+
+  const phoneLogin = async (phone) => {
+    return await authService.phoneLogin(phone);
+  };
+
+  const verifyOTP = async (phone, otp) => {
+    const res = await authService.verifyOTP(phone, otp);
+    setUser(res.user);
+    setIsAuthenticated(true);
+    return res;
+  };
+
   const value = {
     user,
     loading,
@@ -100,6 +118,9 @@ export function AuthProvider({ children }) {
     register,
     logout,
     updateProfile,
+    googleLogin,
+    phoneLogin,
+    verifyOTP,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

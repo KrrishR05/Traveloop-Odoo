@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   MapPin, Calendar, FileText, DollarSign, Image, ArrowRight, ArrowLeft, CheckCircle2,
 } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { destinations } from '../data/destinations';
 
 const DESTINATIONS_QUICK = [
   'Bali, Indonesia', 'Paris, France', 'Tokyo, Japan', 'Santorini, Greece',
@@ -21,12 +22,18 @@ const TRIP_TYPES = [
 
 export default function CreateTrip() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const prefillDest = location.state?.prefillDestination || '';
+
   const [form, setForm] = useState({
-    title:       '',
-    destination: '',
-    startDate:   '',
-    endDate:     '',
+    title:       prefillDest ? `Trip to ${prefillDest}` : '',
+    destination: prefillDest,
+    startDate:   today,
+    endDate:     tomorrow,
     description: '',
     tripType:    '',
     budget:      '',
@@ -256,25 +263,39 @@ export default function CreateTrip() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Preview</p>
             <div className="rounded-2xl border border-slate-100 shadow-card overflow-hidden">
               {/* Cover */}
-              <div className="relative h-36 bg-gradient-to-br from-primary-600 to-indigo-600">
-                {form.coverImage && (
-                  <img
-                    src={form.coverImage}
-                    alt="Cover"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                )}
-                {!form.coverImage && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <MapPin className="w-10 h-10 text-white/30" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-3 left-4 text-white">
-                  <p className="font-semibold text-sm drop-shadow">
+              <div className="relative h-48 bg-slate-900 rounded-t-2xl overflow-hidden">
+                {(() => {
+                  // Find image from destinations if available
+                  const knownDest = destinations.find(d => form.destination && d.name.toLowerCase().includes(form.destination.toLowerCase()));
+                  const displayImage = form.coverImage || knownDest?.image || (form.destination ? 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=600&h=400' : '');
+                  
+                  return displayImage ? (
+                    <img
+                      src={displayImage}
+                      alt="Cover"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-600 to-indigo-600">
+                      <MapPin className="w-10 h-10 text-white/30" />
+                    </div>
+                  );
+                })()}
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                
+                {/* Text overlay like main page */}
+                <div className="absolute bottom-4 left-5 right-5 text-white">
+                  <h3 className="font-bold text-2xl drop-shadow-md leading-tight">
                     {form.title || 'Your Trip Title'}
-                  </p>
+                  </h3>
+                  {form.destination && (
+                    <p className="text-white/80 text-sm mt-1 flex items-center gap-1.5 font-medium drop-shadow">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {form.destination}
+                    </p>
+                  )}
                 </div>
               </div>
 

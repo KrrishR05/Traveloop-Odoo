@@ -111,7 +111,7 @@
   /* Input modern */
   .input-modern {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
     border-radius: 0.75rem;
     border: 1px solid #e2e8f0;
     background: rgba(248,250,252,0.80);

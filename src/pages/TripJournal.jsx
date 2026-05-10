@@ -114,9 +114,11 @@ export default function TripJournal() {
   const [entries, setEntries] = useState(journalEntries);
   const [search, setSearch] = useState('');
   const [filterTrip, setFilterTrip] = useState('all');
+  const [sortBy, setSortBy] = useState('date-desc');
   const [newModalOpen, setNewModalOpen] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
 
+  const now = new Date();
   const [draft, setDraft] = useState({
     tripId: myTrips[0]?.id ?? 1,
     mood: '😊',
@@ -125,6 +127,8 @@ export default function TripJournal() {
     highlight: '',
     tags: '',
     weather: '',
+    date: now.toISOString().split('T')[0],
+    time: now.toTimeString().slice(0, 5),
   });
 
   const filtered = entries.filter(e => {
@@ -134,6 +138,19 @@ export default function TripJournal() {
       e.content.toLowerCase().includes(search.toLowerCase()) ||
       e.tripName.toLowerCase().includes(search.toLowerCase());
     return matchTrip && matchSearch;
+  });
+
+  const sortedAndFiltered = [...filtered].sort((a, b) => {
+    if (sortBy === 'date-desc') {
+      return (b.timestamp || new Date(b.date).getTime()) - (a.timestamp || new Date(a.date).getTime());
+    } else if (sortBy === 'date-asc') {
+      return (a.timestamp || new Date(a.date).getTime()) - (b.timestamp || new Date(b.date).getTime());
+    } else if (sortBy === 'name') {
+      return a.title.localeCompare(b.title);
+    } else if (sortBy === 'country') {
+      return a.tripName.localeCompare(b.tripName);
+    }
+    return 0;
   });
 
   const handleStar = (id) => setEntries(prev => prev.map(e => e.id === id ? { ...e, isStarred: !e.isStarred } : e));
@@ -149,6 +166,8 @@ export default function TripJournal() {
       highlight: entry.highlight ?? '',
       tags: entry.tags.join(', '),
       weather: entry.weather ?? '',
+      date: entry.rawDate || new Date().toISOString().split('T')[0],
+      time: entry.rawTime || new Date().toTimeString().slice(0, 5),
     });
     setNewModalOpen(true);
   };
@@ -156,21 +175,32 @@ export default function TripJournal() {
   const handleSave = () => {
     const tagArr = draft.tags.split(',').map(t => t.trim()).filter(Boolean);
     const tripName = myTrips.find(t => t.id === Number(draft.tripId))?.name ?? 'My Trip';
+    
+    // Parse the draft date and time to format it nicely for the entry card
+    const dateObj = new Date(`${draft.date}T${draft.time}`);
+    const formattedDate = dateObj.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formattedTime = dateObj.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+    const displayDate = `${formattedDate} at ${formattedTime}`;
+
     if (editEntry) {
       setEntries(prev => prev.map(e => e.id === editEntry.id ? {
         ...e, ...draft, tripId: Number(draft.tripId), tripName, tags: tagArr,
+        date: displayDate, rawDate: draft.date, rawTime: draft.time, timestamp: dateObj.getTime()
       } : e));
     } else {
       const newEntry = {
         id: Date.now(), ...draft, tripId: Number(draft.tripId), tripName, tags: tagArr,
-        date: new Date().toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }),
-        images: [], isStarred: false,
+        date: displayDate, rawDate: draft.date, rawTime: draft.time,
+        images: [], isStarred: false, timestamp: dateObj.getTime()
       };
       setEntries(prev => [newEntry, ...prev]);
     }
     setNewModalOpen(false);
     setEditEntry(null);
-    setDraft({ tripId: myTrips[0]?.id ?? 1, mood: '😊', title: '', content: '', highlight: '', tags: '', weather: '' });
+    setDraft({ 
+      tripId: myTrips[0]?.id ?? 1, mood: '😊', title: '', content: '', highlight: '', tags: '', weather: '',
+      date: new Date().toISOString().split('T')[0], time: new Date().toTimeString().slice(0, 5)
+    });
   };
 
   const starredCount = entries.filter(e => e.isStarred).length;
@@ -209,7 +239,7 @@ export default function TripJournal() {
         ))}
       </div>
 
-      {/* ── Search + Filter ─────────────────────────────────────── */}
+      {/* ── Search + Filter + Sort ─────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -224,12 +254,22 @@ export default function TripJournal() {
           <option value="all">All Trips</option>
           {myTrips.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          className="px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-card text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all min-w-[150px]"
+        >
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="name">Sort by Name</option>
+          <option value="country">Sort by Country/Trip</option>
+        </select>
       </div>
 
       {/* ── Entries Grid ────────────────────────────────────────── */}
-      {filtered.length > 0 ? (
+      {sortedAndFiltered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(entry => (
+          {sortedAndFiltered.map(entry => (
             <EntryCard key={entry.id} entry={entry} onDelete={handleDelete} onEdit={handleEdit} onStar={handleStar} />
           ))}
         </div>
@@ -261,6 +301,19 @@ export default function TripJournal() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">Weather</label>
               <input type="text" value={draft.weather} onChange={e => setDraft(p => ({ ...p, weather: e.target.value }))} placeholder="Sunny, 22°C"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all text-slate-800 text-sm" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">Date</label>
+              <input type="date" value={draft.date} onChange={e => setDraft(p => ({ ...p, date: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all text-slate-800 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">Time</label>
+              <input type="time" value={draft.time} onChange={e => setDraft(p => ({ ...p, time: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all text-slate-800 text-sm" />
             </div>
           </div>

@@ -9,7 +9,11 @@ from .models import UserProfile
 from .serializers import (
     RegisterSerializer, LoginSerializer, ForgotPasswordSerializer,
     UserProfileSerializer, ProfileUpdateSerializer,
+    GoogleLoginSerializer, PhoneLoginSerializer, OTPVerifySerializer,
 )
+
+# In-memory OTP store for demo purposes
+_otp_store = {}
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
@@ -154,3 +158,112 @@ def profile_view(request):
         'user': UserProfileSerializer(profile).data,
         'message': 'Profile updated successfully!',
     })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login_view(request):
+    """Google Sign-In (demo) — create or find user by email, return token."""
+    serializer = GoogleLoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
+    email = data['email']
+    first_name = data.get('first_name', email.split('@')[0])
+    last_name = data.get('last_name', '')
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Auto-register
+        username = email.lower().split('@')[0]
+        base = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base}{counter}'
+            counter += 1
+
+        user = User.objects.create_user(
+            username=username, email=email,
+            password=User.objects.make_random_password(),
+            first_name=first_name, last_name=last_name,
+        )
+        profile = UserProfile.objects.create(user=user)
+        if data.get('avatar_url'):
+            profile.avatar_url = data['avatar_url']
+            profile.save()
+
+    token, _ = Token.objects.get_or_create(user=user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    return Response({
+        'token': token.key,
+        'user': UserProfileSerializer(profile).data,
+        'message': 'Google login successful!',
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def phone_login_view(request):
+    """Send OTP to phone number (demo — OTP is always 123456)."""
+    serializer = PhoneLoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    phone = serializer.validated_data['phone']
+    otp = '123456'  # Demo OTP
+    _otp_store[phone] = otp
+    print(f'[OTP] Code for {phone}: {otp}')
+
+    return Response({
+        'message': f'OTP sent to {phone}',
+        'demo_otp': otp,  # Exposed for demo/hackathon
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp_view(request):
+    """Verify OTP and authenticate user."""
+    serializer = OTPVerifySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    phone = serializer.validated_data['phone']
+    otp = serializer.validated_data['otp']
+
+    stored = _otp_store.get(phone)
+    if stored != otp:
+        return Response({'error': 'Invalid OTP.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clear used OTP
+    _otp_store.pop(phone, None)
+
+    # Find or create user by phone
+    try:
+        profile = UserProfile.objects.get(phone=phone)
+        user = profile.user
+    except UserProfile.DoesNotExist:
+        username = f'phone_{phone[-4:]}'
+        base = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base}{counter}'
+            counter += 1
+
+        user = User.objects.create_user(
+            username=username, email='',
+            password=User.objects.make_random_password(),
+        )
+        profile = UserProfile.objects.create(user=user, phone=phone)
+
+    token, _ = Token.objects.get_or_create(user=user)
+
+    return Response({
+        'token': token.key,
+        'user': UserProfileSerializer(profile).data,
+        'message': 'Phone verified successfully!',
+    })
+

@@ -91,6 +91,30 @@ export default function UserProfile() {
     await logout();
   };
 
+  const handleShareProfile = async () => {
+    const shareData = { title: `${displayUser.name} on Traveloop`, url: window.location.href };
+    try {
+      if (navigator.share) { await navigator.share(shareData); }
+      else { await navigator.clipboard.writeText(window.location.href); alert('Profile link copied!'); }
+    } catch { /* user cancelled */ }
+  };
+
+  const handleAvatarUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      // For demo: create a local object URL and save as avatar_url
+      const url = URL.createObjectURL(file);
+      try {
+        await updateProfile({ avatar_url: url });
+      } catch (err) { console.error('Avatar upload failed:', err); }
+    };
+    input.click();
+  };
+
   const statItems = [
     { label: 'Trips',      value: displayUser.stats.trips,      icon: MapPin   },
     { label: 'Countries',  value: displayUser.stats.countries,  icon: Globe    },
@@ -130,7 +154,9 @@ export default function UserProfile() {
                 alt={displayUser.name}
                 className="w-24 h-24 rounded-2xl border-4 border-white shadow-card-lg object-cover bg-primary-100"
               />
-              <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center
+              <button
+                onClick={handleAvatarUpload}
+                className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center
                 text-white shadow-sm hover:bg-primary-700 transition-colors">
                 <Camera className="w-3.5 h-3.5" />
               </button>
@@ -138,7 +164,7 @@ export default function UserProfile() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 sm:mb-1">
-              <Button variant="secondary" size="sm" onClick={() => {}}>
+              <Button variant="secondary" size="sm" onClick={handleShareProfile}>
                 <Share2 className="w-4 h-4" /> Share
               </Button>
               <Button variant="brand" size="sm" onClick={() => setEditModalOpen(true)}>
