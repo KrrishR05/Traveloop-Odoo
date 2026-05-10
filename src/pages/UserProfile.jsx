@@ -9,38 +9,98 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
-import { currentUser, myTrips } from '../data/community';
+import { useAuth } from '../context/AuthContext';
+import { myTrips } from '../data/community';
 
 const statColors = ['text-primary-600 bg-primary-50', 'text-indigo-600 bg-indigo-50', 'text-pink-600 bg-pink-50', 'text-amber-600 bg-amber-50'];
 
+const defaultBadges = [
+  { id: 1, icon: '🌍', label: 'World Explorer', desc: 'Started your travel journey' },
+  { id: 2, icon: '📸', label: 'Photo Artisan', desc: 'Share travel photos' },
+  { id: 3, icon: '🗺️', label: 'Planner Pro', desc: 'Create itineraries' },
+  { id: 4, icon: '⭐', label: 'Top Reviewer', desc: 'Review activities' },
+];
+
+const defaultPrefs = {
+  travelStyle: 'Adventure and Culture',
+  favoriteContinent: 'Asia',
+  typicalBudget: '$100-$200/day',
+  languages: ['English'],
+};
+
 export default function UserProfile() {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ ...currentUser });
-  const [editMode, setEditMode] = useState(false);
-  const [editData, setEditData] = useState({ ...currentUser });
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('trips');
+  const { user, logout, updateProfile } = useAuth();
 
-  const handleSave = () => {
-    setUser({ ...editData });
-    setEditModalOpen(false);
+  // Build display data from auth context user
+  const displayUser = {
+    name: user?.full_name || user?.username || 'Traveler',
+    handle: `@${user?.username || 'user'}`,
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
+    bio: user?.bio || 'Passionate traveler exploring the world.',
+    avatar: user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`,
+    coverImage: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=1200&h=400',
+    joinedDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently',
+    stats: {
+      trips: myTrips.length,
+      countries: 4,
+      followers: 0,
+      following: 0,
+    },
+    badges: defaultBadges,
+    preferences: defaultPrefs,
+  };
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    bio: user?.bio || '',
+    location: user?.location || '',
+    phone: user?.phone || '',
+  });
+  const [activeTab, setActiveTab] = useState('trips');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateProfile(editData);
+      setEditModalOpen(false);
+    } catch (err) {
+      console.error('Profile update failed:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setEditData({ ...user });
+    setEditData({
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      bio: user?.bio || '',
+      location: user?.location || '',
+      phone: user?.phone || '',
+    });
     setEditModalOpen(false);
   };
 
+  const handleLogout = async () => {
+    await logout();
+  };
+
   const statItems = [
-    { label: 'Trips',      value: user.stats.trips,      icon: MapPin   },
-    { label: 'Countries',  value: user.stats.countries,  icon: Globe    },
-    { label: 'Followers',  value: `${(user.stats.followers/1000).toFixed(1)}k`, icon: Users },
-    { label: 'Following',  value: user.stats.following,  icon: Heart    },
+    { label: 'Trips',      value: displayUser.stats.trips,      icon: MapPin   },
+    { label: 'Countries',  value: displayUser.stats.countries,  icon: Globe    },
+    { label: 'Followers',  value: displayUser.stats.followers,  icon: Users    },
+    { label: 'Following',  value: displayUser.stats.following,  icon: Heart    },
   ];
 
   const tabs = [
     { id: 'trips',   label: 'My Trips',   count: myTrips.length },
-    { id: 'badges',  label: 'Badges',     count: user.badges.length },
+    { id: 'badges',  label: 'Badges',     count: displayUser.badges.length },
     { id: 'prefs',   label: 'Preferences' },
   ];
 
@@ -52,7 +112,7 @@ export default function UserProfile() {
         {/* Cover photo */}
         <div className="h-52 md:h-64 relative">
           <img
-            src={user.coverImage}
+            src={displayUser.coverImage}
             alt="Cover"
             className="w-full h-full object-cover"
           />
@@ -66,8 +126,8 @@ export default function UserProfile() {
             {/* Avatar */}
             <div className="relative w-24 h-24 flex-shrink-0">
               <img
-                src={user.avatar}
-                alt={user.name}
+                src={displayUser.avatar}
+                alt={displayUser.name}
                 className="w-24 h-24 rounded-2xl border-4 border-white shadow-card-lg object-cover bg-primary-100"
               />
               <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center
@@ -90,14 +150,16 @@ export default function UserProfile() {
           {/* Name & Bio */}
           <div className="mt-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{user.name}</h1>
-              <span className="text-sm text-slate-400 font-medium">{user.handle}</span>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{displayUser.name}</h1>
+              <span className="text-sm text-slate-400 font-medium">{displayUser.handle}</span>
             </div>
-            <p className="text-sm text-slate-600 mt-1.5 max-w-lg leading-relaxed">{user.bio}</p>
+            <p className="text-sm text-slate-600 mt-1.5 max-w-lg leading-relaxed">{displayUser.bio}</p>
             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500">
-              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary-400" />{user.location}</span>
-              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary-400" />Joined {user.joinedDate}</span>
-              <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-primary-400" />{user.email}</span>
+              {displayUser.location && (
+                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary-400" />{displayUser.location}</span>
+              )}
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary-400" />Joined {displayUser.joinedDate}</span>
+              <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-primary-400" />{displayUser.email}</span>
             </div>
           </div>
         </div>
@@ -168,7 +230,7 @@ export default function UserProfile() {
       {/* Badges */}
       {activeTab === 'badges' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {user.badges.map(badge => (
+          {displayUser.badges.map(badge => (
             <div key={badge.id} className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-slate-100
               shadow-card hover:shadow-card-lg hover:-translate-y-1 transition-all duration-300 group">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-50 to-indigo-50 flex items-center justify-center
@@ -199,10 +261,10 @@ export default function UserProfile() {
       {activeTab === 'prefs' && (
         <div className="space-y-4">
           {[
-            { label: 'Travel Style',        value: user.preferences.travelStyle,        icon: '🌍' },
-            { label: 'Favorite Continent',  value: user.preferences.favoriteContinent,  icon: '🗺️' },
-            { label: 'Typical Budget',      value: user.preferences.typicalBudget,      icon: '💰' },
-            { label: 'Languages',           value: user.preferences.languages.join(', '), icon: '🗣️' },
+            { label: 'Travel Style',        value: displayUser.preferences.travelStyle,        icon: '🌍' },
+            { label: 'Favorite Continent',  value: displayUser.preferences.favoriteContinent,  icon: '🗺️' },
+            { label: 'Typical Budget',      value: displayUser.preferences.typicalBudget,      icon: '💰' },
+            { label: 'Languages',           value: displayUser.preferences.languages.join(', '), icon: '🗣️' },
           ].map(pref => (
             <div key={pref.label} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 shadow-card">
               <div className="flex items-center gap-3">
@@ -224,8 +286,11 @@ export default function UserProfile() {
               border border-slate-200 hover:bg-slate-50 transition-all">
               <Settings className="w-4 h-4" /> Account Settings
             </button>
-            <button className="flex items-center gap-2 text-sm text-red-500 px-4 py-2.5 rounded-xl
-              border border-red-100 hover:bg-red-50 transition-all">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-sm text-red-500 px-4 py-2.5 rounded-xl
+              border border-red-100 hover:bg-red-50 transition-all"
+            >
               <LogOut className="w-4 h-4" /> Sign Out
             </button>
           </div>
@@ -235,10 +300,27 @@ export default function UserProfile() {
       {/* ── Edit Profile Modal ───────────────────────────────────── */}
       <Modal isOpen={editModalOpen} onClose={handleCancel} title="Edit Profile" size="md">
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { field: 'first_name', label: 'First Name', type: 'text' },
+              { field: 'last_name',  label: 'Last Name',  type: 'text' },
+            ].map(({ field, label, type }) => (
+              <div key={field} className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">{label}</label>
+                <input
+                  type={type}
+                  value={editData[field]}
+                  onChange={e => setEditData(prev => ({ ...prev, [field]: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50
+                    focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                    transition-all text-slate-800 text-sm"
+                />
+              </div>
+            ))}
+          </div>
           {[
-            { field: 'name',     label: 'Full Name',  type: 'text' },
-            { field: 'email',    label: 'Email',      type: 'email' },
-            { field: 'location', label: 'Location',   type: 'text' },
+            { field: 'location', label: 'Location', type: 'text' },
+            { field: 'phone',    label: 'Phone',    type: 'text' },
           ].map(({ field, label, type }) => (
             <div key={field} className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">{label}</label>
@@ -267,8 +349,15 @@ export default function UserProfile() {
             <Button variant="secondary" size="sm" onClick={handleCancel}>
               <X className="w-4 h-4" /> Cancel
             </Button>
-            <Button variant="brand" size="sm" onClick={handleSave}>
-              <Check className="w-4 h-4" /> Save Changes
+            <Button variant="brand" size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                <><Check className="w-4 h-4" /> Save Changes</>
+              )}
             </Button>
           </div>
         </div>

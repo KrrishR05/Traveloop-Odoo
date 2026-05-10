@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Plus, Compass, Search, LayoutList, UserCircle2, Briefcase, Users, BookOpen } from 'lucide-react';
+import { Menu, X, Plus, Compass, Search, LayoutList, UserCircle2, Briefcase, Users, BookOpen, DollarSign, BarChart3 } from 'lucide-react';
 import TripLogo from '../ui/TripLogo';
+import { useAuth } from '../../context/AuthContext';
 
 const navLinks = [
   { to: '/',                  label: 'Discover',   icon: Compass    },
@@ -10,11 +11,17 @@ const navLinks = [
   { to: '/my-trips',          label: 'My Trips',   icon: Briefcase  },
   { to: '/community',         label: 'Community',  icon: Users      },
   { to: '/journal',           label: 'Journal',    icon: BookOpen   },
+  { to: '/budget',            label: 'Budget',     icon: DollarSign },
+  { to: '/analytics',         label: 'Analytics',  icon: BarChart3  },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+
+  const userInitial = user?.full_name?.[0] || user?.first_name?.[0] || '?';
+  const avatarUrl = user?.avatar_url;
 
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -70,11 +77,23 @@ export default function Navbar() {
               {/* Avatar → Profile */}
               <Link
                 to="/profile"
-                className={`p-2 rounded-xl transition-all duration-200
-                  ${isActive('/profile') ? 'text-primary-600 bg-primary-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-200
+                  ${isActive('/profile') ? 'bg-primary-50' : 'hover:bg-slate-100'}`}
                 aria-label="Profile"
               >
-                <UserCircle2 className="w-6 h-6" />
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-7 h-7 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-indigo-500
+                    flex items-center justify-center text-white text-xs font-bold">
+                    {userInitial}
+                  </div>
+                )}
+                {user?.first_name && (
+                  <span className="hidden xl:block text-sm font-medium text-slate-700">
+                    {user.first_name}
+                  </span>
+                )}
               </Link>
 
               {/* Mobile menu toggle */}

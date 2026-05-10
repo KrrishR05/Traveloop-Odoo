@@ -60,7 +60,7 @@ export const destinations = [
     rating: 4.8,
     reviews: 3890,
     tags: ['Scenic', 'Beach', 'Food'],
-    avgBudget: '#180/day',
+    avgBudget: '$180/day',
     bestTime: 'May – Oct',
     description: 'Dramatic cliffside villages, turquoise coves, and Italy\'s finest cuisine along a breathtaking coastal drive.',
   },

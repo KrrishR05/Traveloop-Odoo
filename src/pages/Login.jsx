@@ -3,17 +3,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TripLogo from '../components/ui/TripLogo';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate successful login → go to dashboard
-    navigate('/');
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Invalid email or password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,6 +78,14 @@ export default function Login() {
             </Link>
           </p>
 
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700
+              animate-[fadeUp_0.3s_ease-out_forwards]">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
@@ -88,9 +109,9 @@ export default function Login() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-slate-700">Password</label>
-                <a href="#" className="text-xs text-primary-600 hover:text-primary-700 transition-colors font-medium">
+                <Link to="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700 transition-colors font-medium">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
@@ -115,38 +136,27 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember me */}
-            <div className="flex items-center gap-2">
-              <input
-                id="remember"
-                type="checkbox"
-                className="w-4 h-4 rounded border-slate-300 text-primary-600
-                  focus:ring-primary-500 accent-primary-600"
-              />
-              <label htmlFor="remember" className="text-sm text-slate-600">Remember me</label>
-            </div>
-
-            <Button type="submit" variant="brand" size="lg" className="w-full mt-2">
-              Sign in
-              <ArrowRight className="w-4 h-4" />
+            <Button
+              type="submit"
+              variant="brand"
+              size="lg"
+              className="w-full mt-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                <>Sign in <ArrowRight className="w-4 h-4" /></>
+              )}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-xs text-slate-400 font-medium">or continue as</span>
-            <div className="flex-1 h-px bg-slate-200" />
-          </div>
-
-          <button
-            onClick={() => navigate('/')}
-            className="w-full py-3 rounded-xl text-sm font-medium text-slate-600
-              border border-slate-200 hover:bg-slate-50 hover:border-slate-300
-              transition-all duration-200"
-          >
-            Continue as Guest →
-          </button>
+          <p className="mt-6 text-center text-xs text-slate-400">
+            Your session will automatically expire after 10 minutes of inactivity.
+          </p>
         </div>
       </div>
     </div>

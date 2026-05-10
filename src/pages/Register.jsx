@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, MapPin, Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import Button from '../components/ui/Button';
 import TripLogo from '../components/ui/TripLogo';
+import { useAuth } from '../context/AuthContext';
 
 const passwordStrength = (pwd) => {
   if (!pwd) return { score: 0, label: '', color: '' };
@@ -23,17 +24,45 @@ const passwordStrength = (pwd) => {
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', password: '', city: '', country: '',
   });
   const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/');
+    setError('');
+    setLoading(true);
+
+    try {
+      await register({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        city: formData.city,
+        country: formData.country,
+      });
+      navigate('/');
+    } catch (err) {
+      const data = err.data || {};
+      // Extract first error message
+      if (data.email) {
+        setError(Array.isArray(data.email) ? data.email[0] : data.email);
+      } else if (data.password) {
+        setError(Array.isArray(data.password) ? data.password[0] : data.password);
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const strength = passwordStrength(formData.password);
@@ -91,6 +120,14 @@ export default function Register() {
               Sign in
             </Link>
           </p>
+
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700
+              animate-[fadeUp_0.3s_ease-out_forwards]">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name row */}
@@ -206,9 +243,21 @@ export default function Register() {
               ))}
             </div>
 
-            <Button type="submit" variant="brand" size="lg" className="w-full mt-2">
-              Create Account
-              <ArrowRight className="w-4 h-4" />
+            <Button
+              type="submit"
+              variant="brand"
+              size="lg"
+              className="w-full mt-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Creating account...
+                </span>
+              ) : (
+                <>Create Account <ArrowRight className="w-4 h-4" /></>
+              )}
             </Button>
           </form>
 

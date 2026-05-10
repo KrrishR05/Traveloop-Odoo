@@ -1,0 +1,12 @@
+# ==========================================
+# TRAVELOOP PROJECT REQUIREMENTS
+# ==========================================
+
+# --- Django Backend (Python) ---
+django>=5.2
+djangorestframework>=3.17
+django-cors-headers>=4.9
+
+# --- Frontend (Node.js/NPM — managed via package.json) ---
+# react 19, vite 8, tailwindcss 4, recharts, react-router-dom 7
+# Run `npm install` in project root to install frontend dependencies.
