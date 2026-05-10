@@ -1,29 +1,149 @@
-import { Link } from 'react-router-dom';
-import { UserCircle, Map } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Plus, Compass, Search, LayoutList, UserCircle2 } from 'lucide-react';
+import TripLogo from '../ui/TripLogo';
+
+const navLinks = [
+  { to: '/',                  label: 'Discover',    icon: Compass  },
+  { to: '/cities/search',     label: 'Cities',      icon: Search   },
+  { to: '/activities/search', label: 'Activities',  icon: LayoutList },
+];
 
 export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  const isActive = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
   return (
-    <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-lg border-b border-white/40 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <Map className="h-8 w-8 text-primary-600" />
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
-              Traveloop
-            </span>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <Link to="/login" className="text-slate-600 hover:text-primary-600 font-medium transition-colors">
-              Sign In
+    <nav className="fixed top-0 left-0 right-0 z-50">
+      {/* Main bar */}
+      <div className="mx-4 mt-3">
+        <div
+          className="max-w-7xl mx-auto px-4 sm:px-6
+            bg-white/80 backdrop-blur-xl
+            border border-white/60 shadow-glass
+            rounded-2xl"
+        >
+          <div className="flex items-center justify-between h-16">
+
+            {/* Logo */}
+            <Link to="/" className="flex-shrink-0">
+              <TripLogo size="md" />
             </Link>
-            <Link to="/register" className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 rounded-full font-medium transition-all duration-200 shadow-md hover:shadow-lg">
-              Sign Up
-            </Link>
-            <button className="text-slate-400 hover:text-slate-600 transition-colors">
-              <UserCircle className="h-8 w-8" />
-            </button>
+
+            {/* Desktop nav links */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map(({ to, label, icon: Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
+                    transition-all duration-200
+                    ${isActive(to)
+                      ? 'text-primary-700 bg-primary-50'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2">
+              <Link
+                to="/trips/create"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                  text-white transition-all duration-200 hover:shadow-brand hover:-translate-y-0.5"
+                style={{ backgroundImage: 'linear-gradient(135deg, #0d9488 0%, #4f46e5 100%)' }}
+              >
+                <Plus className="w-4 h-4" />
+                New Trip
+              </Link>
+
+              {/* Auth links */}
+              <Link
+                to="/login"
+                className="hidden sm:block text-sm font-medium text-slate-600
+                  hover:text-primary-600 transition-colors px-3 py-2 rounded-xl
+                  hover:bg-slate-50"
+              >
+                Sign in
+              </Link>
+
+              {/* Avatar */}
+              <button
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600
+                  hover:bg-slate-100 transition-all duration-200"
+              >
+                <UserCircle2 className="w-6 h-6" />
+              </button>
+
+              {/* Mobile menu toggle */}
+              <button
+                className="md:hidden p-2 rounded-xl text-slate-500
+                  hover:bg-slate-100 transition-colors"
+                onClick={() => setMobileOpen((v) => !v)}
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile dropdown */}
+        {mobileOpen && (
+          <div
+            className="md:hidden mt-2 max-w-7xl mx-auto px-2
+              bg-white/95 backdrop-blur-xl border border-white/60
+              shadow-card-lg rounded-2xl overflow-hidden
+              animate-[fadeUp_0.25s_ease-out_forwards]"
+          >
+            <div className="p-3 space-y-1">
+              {navLinks.map(({ to, label, icon: Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                    transition-colors duration-200
+                    ${isActive(to)
+                      ? 'text-primary-700 bg-primary-50'
+                      : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Link>
+              ))}
+
+              <div className="pt-2 border-t border-slate-100 space-y-1">
+                <Link
+                  to="/trips/create"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold
+                    text-white transition-all duration-200"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #0d9488 0%, #4f46e5 100%)' }}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Trip
+                </Link>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                    text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

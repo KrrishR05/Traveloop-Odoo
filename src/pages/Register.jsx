@@ -1,172 +1,223 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Map, Mail, Lock, User, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, MapPin, Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import Button from '../components/ui/Button';
+import TripLogo from '../components/ui/TripLogo';
+
+const passwordStrength = (pwd) => {
+  if (!pwd) return { score: 0, label: '', color: '' };
+  let score = 0;
+  if (pwd.length >= 8)      score++;
+  if (/[A-Z]/.test(pwd))   score++;
+  if (/[0-9]/.test(pwd))   score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  const map = [
+    { label: 'Too short',  color: 'bg-red-400'    },
+    { label: 'Weak',       color: 'bg-orange-400' },
+    { label: 'Fair',       color: 'bg-amber-400'  },
+    { label: 'Good',       color: 'bg-primary-500'},
+    { label: 'Strong',     color: 'bg-emerald-500'},
+  ];
+  return { score, ...map[score] };
+};
 
 export default function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    city: '',
-    country: ''
+    firstName: '', lastName: '', email: '', password: '', city: '', country: '',
   });
+  const [showPwd, setShowPwd] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Register:', formData);
+    navigate('/');
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute bottom-[20%] left-[-10%] w-[40%] h-[40%] bg-accent rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style={{ animationDelay: '2s'}}></div>
+  const strength = passwordStrength(formData.password);
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-xl relative z-10">
-        <Link to="/" className="flex justify-center items-center space-x-2">
-          <Map className="h-10 w-10 text-primary-600" />
-          <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
-            Traveloop
-          </span>
-        </Link>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Create your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-            Sign in
-          </Link>
-        </p>
+  return (
+    <div className="min-h-screen flex relative overflow-hidden">
+
+      {/* ── Left visual (hidden on mobile) ───────────────────────── */}
+      <div className="hidden lg:flex lg:w-2/5 relative">
+        <img
+          src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=900&h=1200"
+          alt="Mountain lake reflection"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-primary-800/50 to-primary-900/60" />
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          <TripLogo size="md" className="[&_span]:text-white [&_span]:![background-image:none]" />
+
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold leading-tight">
+              Your next adventure<br />begins here
+            </h2>
+            <p className="text-white/70 text-sm leading-relaxed">
+              Join thousands of travelers who plan smarter,
+              explore deeper, and remember every moment.
+            </p>
+            {/* Feature list */}
+            {['Day-by-day itinerary builder', 'Smart activity suggestions', 'Budget estimator'].map((f) => (
+              <div key={f} className="flex items-center gap-2.5 text-sm text-white/80">
+                <span className="w-5 h-5 rounded-full bg-primary-400/30 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-primary-300" />
+                </span>
+                {f}
+              </div>
+            ))}
+          </div>
+          <p className="text-white/40 text-xs">Free forever · No credit card required</p>
+        </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/40">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">First Name</label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="firstName"
-                    required
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
-                    placeholder="John"
-                  />
-                </div>
-              </div>
+      {/* ── Right form ──────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-16 py-12
+        bg-white relative overflow-y-auto">
+        <div className="absolute top-0 left-0 w-80 h-80 rounded-full
+          bg-primary-50 blur-3xl opacity-50 pointer-events-none" />
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Last Name</label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-slate-400" />
+        <div className="max-w-md w-full mx-auto relative z-10">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-8"><TripLogo size="md" /></div>
+
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Create your account</h2>
+          <p className="text-slate-500 text-sm mb-8">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
+              Sign in
+            </Link>
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name row */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'First name', name: 'firstName', placeholder: 'Alex', icon: User },
+                { label: 'Last name',  name: 'lastName',  placeholder: 'Rivera', icon: User },
+              ].map(({ label, name, placeholder, icon: Icon }) => (
+                <div key={name} className="space-y-1.5">
+                  <label className="block text-sm font-medium text-slate-700">{label}</label>
+                  <div className="relative">
+                    <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      name={name}
+                      required
+                      value={formData[name]}
+                      onChange={handleChange}
+                      placeholder={placeholder}
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50
+                        focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                        transition-all text-slate-800 placeholder:text-slate-400 text-sm"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    name="lastName"
-                    required
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
-                    placeholder="Doe"
-                  />
                 </div>
-              </div>
+              ))}
             </div>
 
-            <div>
+            {/* Email */}
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">Email address</label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
-                </div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
                   name="email"
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
                   placeholder="you@example.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50
+                    focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                    transition-all text-slate-800 placeholder:text-slate-400 text-sm"
                 />
               </div>
             </div>
 
-            <div>
+            {/* Password + strength */}
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">Password</label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPwd ? 'text' : 'password'}
                   name="password"
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
-                  placeholder="••••••••"
+                  placeholder="Min. 8 characters"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 bg-slate-50
+                    focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                    transition-all text-slate-800 placeholder:text-slate-400 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd((v) => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">City</label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MapPin className="h-5 w-5 text-slate-400" />
+              {/* Strength bar */}
+              {formData.password && (
+                <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex gap-1 flex-1">
+                    {[1,2,3,4].map((n) => (
+                      <div
+                        key={n}
+                        className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                          n <= strength.score ? strength.color : 'bg-slate-200'
+                        }`}
+                      />
+                    ))}
                   </div>
-                  <input
-                    type="text"
-                    name="city"
-                    required
-                    value={formData.city}
-                    onChange={handleChange}
-                    className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
-                    placeholder="New York"
-                  />
+                  <span className="text-xs text-slate-500">{strength.label}</span>
                 </div>
-              </div>
+              )}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Country</label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MapPin className="h-5 w-5 text-slate-400" />
+            {/* Location row */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'City',    name: 'city',    placeholder: 'Mumbai'  },
+                { label: 'Country', name: 'country', placeholder: 'India'   },
+              ].map(({ label, name, placeholder }) => (
+                <div key={name} className="space-y-1.5">
+                  <label className="block text-sm font-medium text-slate-700">{label}</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      name={name}
+                      required
+                      value={formData[name]}
+                      onChange={handleChange}
+                      placeholder={placeholder}
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50
+                        focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                        transition-all text-slate-800 placeholder:text-slate-400 text-sm"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    name="country"
-                    required
-                    value={formData.country}
-                    onChange={handleChange}
-                    className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
-                    placeholder="United States"
-                  />
                 </div>
-              </div>
+              ))}
             </div>
 
-            <div>
-              <Button type="submit" className="w-full">
-                Create Account
-              </Button>
-            </div>
+            <Button type="submit" variant="brand" size="lg" className="w-full mt-2">
+              Create Account
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </form>
+
+          <p className="mt-5 text-center text-xs text-slate-400 leading-relaxed">
+            By signing up, you agree to our{' '}
+            <a href="#" className="text-primary-600 hover:underline">Terms of Service</a>{' '}
+            and{' '}
+            <a href="#" className="text-primary-600 hover:underline">Privacy Policy</a>
+          </p>
         </div>
       </div>
     </div>

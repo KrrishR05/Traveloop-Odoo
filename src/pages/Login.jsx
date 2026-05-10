@@ -1,105 +1,152 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Map, Mail, Lock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import Button from '../components/ui/Button';
+import TripLogo from '../components/ui/TripLogo';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login:', { email, password });
+    // Simulate successful login → go to dashboard
+    navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style={{ animationDelay: '2s'}}></div>
-      <div className="absolute bottom-[-20%] left-[20%] w-[40%] h-[40%] bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" style={{ animationDelay: '4s'}}></div>
+    <div className="min-h-screen flex relative overflow-hidden">
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <Link to="/" className="flex justify-center items-center space-x-2">
-          <Map className="h-10 w-10 text-primary-600" />
-          <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400">
-            Traveloop
-          </span>
-        </Link>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Welcome back
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-            Sign up
-          </Link>
-        </p>
+      {/* ── Left panel — visual ────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-1/2 relative">
+        <img
+          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=900&h=1200"
+          alt="Tropical beach sunset"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/70 via-primary-800/50 to-indigo-900/60" />
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+          <TripLogo size="md" className="[&_span]:text-white [&_span]:![background-image:none]" />
+          <div>
+            <blockquote className="text-2xl font-light leading-relaxed text-white/90 mb-6">
+              "The world is a book,<br />and those who do not travel<br />
+              <span className="font-semibold text-white">read only one page."</span>
+            </blockquote>
+            <p className="text-white/60 text-sm">— Saint Augustine</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="w-2 h-2 rounded-full bg-white/40" />
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/40">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
+      {/* ── Right panel — form ──────────────────────────────────── */}
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-12
+        bg-white relative">
+        {/* Subtle decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full
+          bg-primary-50 blur-3xl opacity-60 pointer-events-none" />
+
+        <div className="max-w-sm w-full mx-auto relative z-10">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-8">
+            <TripLogo size="md" />
+          </div>
+
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Welcome back</h2>
+          <p className="text-slate-500 text-sm mb-8">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
+              Sign up free
+            </Link>
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">Email address</label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
-                </div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
                   placeholder="you@example.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50
+                    focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                    transition-all duration-200 text-slate-800 placeholder:text-slate-400 text-sm"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Password</label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-slate-700">Password</label>
+                <a href="#" className="text-xs text-primary-600 hover:text-primary-700 transition-colors font-medium">
+                  Forgot password?
+                </a>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPwd ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none"
                   placeholder="••••••••"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 bg-slate-50
+                    focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400
+                    transition-all duration-200 text-slate-800 placeholder:text-slate-400 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd((v) => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400
+                    hover:text-slate-600 transition-colors"
+                >
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                  Forgot your password?
-                </a>
-              </div>
+            {/* Remember me */}
+            <div className="flex items-center gap-2">
+              <input
+                id="remember"
+                type="checkbox"
+                className="w-4 h-4 rounded border-slate-300 text-primary-600
+                  focus:ring-primary-500 accent-primary-600"
+              />
+              <label htmlFor="remember" className="text-sm text-slate-600">Remember me</label>
             </div>
 
-            <div>
-              <Button type="submit" className="w-full">
-                Sign in
-              </Button>
-            </div>
+            <Button type="submit" variant="brand" size="lg" className="w-full mt-2">
+              Sign in
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs text-slate-400 font-medium">or continue as</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-3 rounded-xl text-sm font-medium text-slate-600
+              border border-slate-200 hover:bg-slate-50 hover:border-slate-300
+              transition-all duration-200"
+          >
+            Continue as Guest →
+          </button>
         </div>
       </div>
     </div>
